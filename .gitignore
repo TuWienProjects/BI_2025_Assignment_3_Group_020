@@ -1,0 +1,8 @@
+# Ignore the 'starvers' folder
+starvers/
+
+# Ignore the '.ipynb_checkpoints' folder
+.ipynb_checkpoints/
+
+# Ignore the 'BI_Projects_3' folder
+BI_Projects_3/
