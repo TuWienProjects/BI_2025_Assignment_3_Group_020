@@ -1,0 +1,6 @@
+metric,value,meets_accuracy,meets_balance,overall_pass
+accuracy,0.9253478113335596,True,,True
+macro_precision,0.9270893614244512,,,
+macro_recall,0.921608001911708,,,
+macro_f1,0.9230526728381995,,,
+min_class_recall,0.8380952380952381,,True,

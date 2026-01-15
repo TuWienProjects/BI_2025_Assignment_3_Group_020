@@ -1,8 +1,42 @@
-# Ignore the 'starvers' folder
-starvers/
+# Python virtual environment
+.venv/
+venv/
+env/
 
-# Ignore the '.ipynb_checkpoints' folder
+# Jupyter Notebook checkpoints
 .ipynb_checkpoints/
 
-# Ignore the 'BI_Projects_3' folder
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# starvers folder
+starvers/
+
+# Temporary and backup files
 BI_Projects_3/
+*.ipynb copy*
+*_old.ipynb
+*_template.ipynb
+temporary_*.ipynb
+
+# Documentation/markdown files (not needed in submission)
+*.md
+!README.md
+
+# Query and testing files
+query.txt
+test_*.py
+
+# Zip files
+*.zip
+
+# PDF files (if generated)
+*.pdf
+
+# LaTeX auxiliary files
+*.aux
+*.log
+*.out
+*.toc
