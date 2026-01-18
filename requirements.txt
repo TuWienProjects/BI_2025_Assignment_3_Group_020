@@ -1,6 +1,7 @@
 ipykernel
 seaborn
 matplotlib
+scikit-learn
 starvers @ git+https://github.com/AllStarsAT/starvers.git
 plotly
 requests

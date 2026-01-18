@@ -1,4 +1,4 @@
-\documentclass[sigconf]{acmart}
+\documentclass[sigconf,nonacm]{acmart}
 
 %% Disable microtype to avoid font expansion issues
 \PassOptionsToPackage{protrusion=false,expansion=false}{microtype}
@@ -6,50 +6,54 @@
 \pdfsuppresswarningpagegroup=1
 
 %% Required packages
-\usepackage{subcaption}
 \usepackage{graphicx}
-\usepackage{booktabs}  %% Professional tables
+\usepackage{subcaption}
+\usepackage[font=footnotesize,labelfont=bf]{caption}
+\usepackage{booktabs}
+\usepackage{url}
 
+\graphicspath{{output/figures/}{../output/figures/}{./output/figures/}}
 
 \AtBeginDocument{ \providecommand\BibTeX{ Bib\TeX } }
-\setcopyright{acmlicensed}
-\copyrightyear{2025}
-\acmYear{2025}
-\acmDOI{XXXXXXX.XXXXXXX}
 
-\acmConference[BI 2025]{Business Intelligence and Data Analytics}{January 2026}{TU Wien, Vienna, Austria}
+%% Student report: do NOT claim ACM publication metadata
+\settopmatter{printacmref=false}
+\renewcommand\footnotetextcopyrightpermission[1]{}
+\pagestyle{plain}
+
+%% Suppress conference information in header/footer
+\acmConference[ ]{ }{ }{ }
+\acmBooktitle{ }
+\acmYear{ }
+\acmDOI{ }
+\acmISBN{ }
+\acmPrice{ }
+\setcopyright{none}
 
 \begin{document}
 
-\title{BI2025 Experiment Report - Human Activity Recognition Using Smartphones\\Group 20}
+\title{BI2025 Experiment Report - Human Activity Recognition Using Smartphones\\\\Group 20}
 
-%% Authors with proper ACM formatting
-\author{Muhammad Sajid Bashir}
-\authornote{Person A - Responsible for Data Understanding, Modeling, and Evaluation}
-\email{e52400204@student.tuwien.ac.at}
-\orcid{0009-0005-3077-022X}
-\affiliation{%
-  \institution{TU Wien}
-  \streetaddress{Karlsplatz 13}
-  \city{Vienna}
-  \country{Austria}
-  \postcode{1040}
-}
 
-\author{Eman Shahin}
-\authornote{Person B - Responsible for Data Preparation, Deployment, and Documentation}
-\email{e12432813@student.tuwien.ac.at}
-\orcid{0000-0000-0000-0001}
-\affiliation{%
-  \institution{TU Wien}
-  \streetaddress{Karlsplatz 13}
-  \city{Vienna}
-  \country{Austria}
-  \postcode{1040}
-}
+          \author{Muhammad Sajid Bashir}
+          \authornote{Student A, Matr.Nr.: 52400204}
+          \affiliation{
+            \institution{TU Wien}
+            \country{Austria}
+          }
+          
+          \author{Eman Shahin}
+          \authornote{Student B, Matr.Nr.: 12432813}
+          \affiliation{
+            \institution{TU Wien}
+            \country{Austria}
+          }
+          
 
 \begin{abstract}
-This report documents a machine learning experiment for Group 20 following the CRISP-DM process model. The project analyzes the Human Activity Recognition with Smartphones dataset to build a classifier that identifies physical activities from sensor data. All experiments and decisions are logged in a provenance knowledge graph using PROV-O and related ontologies to ensure reproducibility.
+This study presents Group 20's CRISP-DM workflow for Human Activity Recognition using smartphone sensors (UCI HAR). We load and describe the data, examine class balance and feature redundancy, and prepare subject-aware splits for training and validation. A Random Forest model tuned with StratifiedGroupKFold achieves test accuracy 0.9253, macro precision 0.9271, macro recall 0.9216, and macro F1 0.9231. We interpret the confusion matrix and per-class support, compare against simple baselines, and inspect bias across subjects.
+
+A provenance-first setup records every phase, dataset, parameter, run, and metric in a knowledge graph using PROV-O/MLSO via the \texttt{starvers} TripleStoreEngine. This end-to-end logging, together with the notebook, supports reproducibility from raw CSVs to derived results and figures. The report summarizes the main decisions and dependencies and offers a practical template for similar sensor-based classification tasks.
 \end{abstract}
 
 \ccsdesc[500]{Computing methodologies~Machine learning}
@@ -58,12 +62,19 @@ This report documents a machine learning experiment for Group 20 following the C
 
 \maketitle
 
+\noindent\textbf{Course report disclaimer.}
+This document is a student project report created for the course
+\textit{Business Intelligence and Data Analytics (BI 2025)} at TU Wien.
+It is not an ACM-published paper and has no official ACM DOI or ISBN.
+\vspace{0.5em}
+
 %% ========================================
 %% 1. BUSINESS UNDERSTANDING
 %% ========================================
 \section{Business Understanding}
 
 \subsection{Data Source and Scenario}
+
 The dataset used in this project is the Human Activity Recognition with Smartphones dataset, 
 published by UCI and available on Kaggle. It contains sensor measurements collected from 
 30 volunteers wearing a Samsung Galaxy S II smartphone on their waist while performing 
@@ -79,7 +90,9 @@ There are also commercial and marketing-related possibilities, such as tailoring
 recommendations based on what the user is currently doing, or understanding long-term activity 
 patterns to improve customer segmentation. This dataset allows us to evaluate how well machine learning models can classify physical activities in these contexts.
 
+
 \subsection{Business Objectives}
+
 The main goal of this project is to build a model that can reliably identify a person's activity 
 based on smartphone sensor data. This kind of model can support different applications, such as 
 health and wellness apps, fall-detection systems, or activity tracking tools.
@@ -92,7 +105,9 @@ fitness offer when the user is active, or delay non-urgent notifications until t
 Overall, the objective is to evaluate how well a data-driven model can classify activities and how 
 such a system might offer practical value in both personal and commercial applications.
 
+
 \subsection{Business Success Criteria}
+
 For this project to be considered successful from a business perspective, the activity recognition 
 model should perform well enough to be useful in real applications. As a general guideline, an 
 accuracy around 85\% or higher would be a good sign that the model is reliable.
@@ -105,7 +120,9 @@ that iss improving user engagement, supporting health monitoring, or enabling mo
 recommendations. If the results support these types of decisions in a meaningful way, we can 
 consider the project successful.
 
+
 \subsection{Data Mining Goals}
+
 The main data mining goal is to build and evaluate a machine learning model that predicts one of 
 six activity labels using the smartphone sensor features. This involves testing different algorithms 
 and comparing their strengths and weaknesses.
@@ -119,7 +136,9 @@ In addition to building a classifier, the goal is to see whether the resulting m
 to support real-world scenarios, such as personalized services, smarter notification timing, or 
 insights for customer profiling.
 
+
 \subsection{Data Mining Success Criteria}
+
 We consider the data mining process successful if the model achieves solid performance across 
 the usual evaluation metrics, such as accuracy, precision, recall, and F1-score. Ideally, the 
 model should reach at least around 85\% accuracy on the test data and show balanced performance 
@@ -132,7 +151,9 @@ Finally, success also depends on whether the model is stable and behaves consist
 cross-validation. The results should be understandable enough to support the practical or business-related 
 applications described earlier
 
+
 \subsection{AI Risk Aspects}
+
 There are a few risks to consider when working with an activity recognition system. The dataset 
 comes from only 30 young adults, so the model might not generalize well to older people, children, 
 or individuals with movement limitations. This could introduce bias.
@@ -148,101 +169,275 @@ poor predictions could result in irrelevant or poorly timed notifications.
 Finally, the study used a specific smartphone model placed at a fixed location on the waist. Real-world 
 usage is more varied, and differences in device placement or sensor quality could affect performance.
 
+
 %% ========================================
 %% 2. DATA UNDERSTANDING
 %% ========================================
 \section{Data Understanding}
 
 \subsection{Overview}
-\textbf{Dataset Description:} The Human Activity Recognition with Smartphones dataset contains 561 engineered features derived from accelerometer and gyroscope sensor readings.
+The HAR dataset comprises 563 columns, including 561 engineered sensor features, subject identifiers, and activity labels. Given the substantial number of features, we document 31 representative attributes to demonstrate the variety of accelerometer and gyroscope measurements, their data types, units, and semantic meanings while maintaining knowledge graph conciseness.
 
-\subsection{Attribute Types, Units, and Semantics}
-The HAR dataset contains 561 engineered features derived from smartphone accelerometer and gyroscope sensors. A representative subset is documented in the knowledge graph using the Croissant schema. Features include time-domain statistics (tBodyAcc-mean/std-X/Y/Z), gyroscope signals (tBodyGyro-mean-X/Y/Z), jerk signals (tBodyAccJerk-mean-X/Y/Z), magnitude calculations (tBodyAccMag-mean), frequency-domain features (fBodyAcc-mean-X/Y/Z), and angle features. All numeric features are normalized to approximately [-1, 1] range.
-
-\subsection{Statistical Properties and Correlations}
+\subsection{Activity Distribution Analysis}
+Understanding class balance, feature correlations, and variance patterns is fundamental to selecting appropriate modeling strategies. We analyze the distribution of activity classes to assess sampling requirements, examine feature correlations to identify redundancy and inform dimensionality reduction, and evaluate variance patterns to discover discriminative features for classification tasks.
 
 
-\begin{figure}[htbp]
-  \centering
-  \begin{subfigure}{0.48\linewidth}
-    \includegraphics[width=\linewidth]{../output/figures/2b_01_activity_distribution.png}
-    \caption{Activity class distribution}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}{0.48\linewidth}
-    \includegraphics[width=\linewidth]{../output/figures/2b_02_top_features_correlation.png}
-    \caption{Top features correlation heatmap}
-  \end{subfigure}
-  \\[0.5cm]
-  \begin{subfigure}{0.48\linewidth}
-    \includegraphics[width=\linewidth]{../output/figures/2b_03_top_variance_features.png}
-    \caption{Top 20 features by variance}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}{0.48\linewidth}
-    \includegraphics[width=\linewidth]{../output/figures/2b_04_correlation_distribution.png}
-    \caption{Correlation coefficient distribution}
-  \end{subfigure}
-  \caption{Statistical properties and correlations of HAR dataset features showing activity distribution, highly correlated features, variance ranking, and correlation distribution with 0.8 threshold marked.}
-  \label{fig:stat_properties}
-\end{figure}
+\begin{table}[htbp]
+\centering
+\caption{Activity Distribution in Training Set}
+\begin{tabular}{lcc}
+\toprule
+Activity & Count & Percentage \\
+\midrule
+LAYING & 1407 & 19.14\%\\
+STANDING & 1374 & 18.69\%\\
+SITTING & 1286 & 17.49\%\\
+WALKING & 1226 & 16.68\%\\
+WALKING\_UPSTAIRS & 1073 & 14.59\%\\
+WALKING\_DOWNSTAIRS & 986 & 13.41\%
+\bottomrule
+\end{tabular}
+\end{table}
 
-\subsection{Data Quality Analysis}
-
-
-\subsection{Visual Exploration}
 
 
 \begin{figure}[htbp]
   \centering
-  \begin{subfigure}{0.48\linewidth}
-    \includegraphics[width=\linewidth]{../output/figures/2d_01_activity_distribution.png}
-    \caption{Activity distribution}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}{0.48\linewidth}
-    \includegraphics[width=\linewidth]{../output/figures/2d_02_subject_distribution.png}
-    \caption{Subject distribution}
-  \end{subfigure}
-  \\[0.5cm]
-  \begin{subfigure}{0.48\linewidth}
-    \includegraphics[width=\linewidth]{../output/figures/2d_03_static_vs_dynamic.png}
-    \caption{Static vs dynamic activity variance}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}{0.48\linewidth}
-    \includegraphics[width=\linewidth]{../output/figures/2d_04_acceleration_distribution.png}
-    \caption{Acceleration distribution by axis}
-  \end{subfigure}
-  \\[0.5cm]
-  \begin{subfigure}{0.48\linewidth}
-    \includegraphics[width=\linewidth]{../output/figures/2d_05_mean_acceleration_by_activity.png}
-    \caption{Mean acceleration by activity}
-  \end{subfigure}
-  \hfill
-  \begin{subfigure}{0.48\linewidth}
-    \includegraphics[width=\linewidth]{../output/figures/2d_06_feature_correlation_heatmap.png}
-    \caption{Feature correlation heatmap}
-  \end{subfigure}
-  \caption{Visual exploration of HAR dataset properties revealing activity and subject distributions, static vs dynamic variance patterns, acceleration patterns across axes and activities, and feature correlations that support hypothesis testing.}
-  \label{fig:visual_exploration}
+  \includegraphics[width=0.85\linewidth]{2b_01_activity_distribution.png}
+  \caption{Figure 1: Activity Class Distribution in Training Dataset}
 \end{figure}
 
-\subsection{Ethical Sensitivity and Bias}
+Class Balance Analysis: The training dataset contains 6 activity classes with the following distribution:
+- LAYING: 1407 samples (19.1\%)
+- STANDING: 1374 samples (18.2\%)
+- SITTING: 1286 samples (17.5\%)
+- WALKING: 1226 samples (16.7\%)
+- WALKING\_UPSTAIRS: 1073 samples (16.4\%)
+- WALKING\_DOWNSTAIRS: 986 samples (13.4\%)
+
+The distribution shows moderate imbalance with a ratio of 1.43:1 between most and least frequent classes. This level of imbalance is manageable for classification modeling. Static activities (LAYING, STANDING, SITTING) collectively represent 54.8\% of samples while dynamic activities (WALKING variants) represent 46.5\%.
+
+\vspace{0.6em}
 
 
-\subsection{Risks and Potential Biases}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.9\linewidth]{2b_02_top_features_correlation.png}
+  \caption{Figure 2: Correlation Heatmap of Highly Correlated Features}
+\end{figure}
+
+Feature Redundancy Analysis: The correlation analysis identified 23058 feature pairs with absolute correlation exceeding 0.8. The heatmap displays the correlation matrix for 10 representative features selected from the most highly correlated pairs.
+
+Key findings include near-perfect correlations (r > 0.95) between body and gravity acceleration magnitude features, indicating these metrics capture overlapping information. Many jerk magnitude and standard magnitude measures also show very high correlation. This substantial redundancy suggests that dimensionality reduction techniques could significantly compress the feature space without substantial information loss.
+
+\vspace{0.6em}
 
 
-\subsection{Required Data Preparation Actions}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.9\linewidth]{2b_03_top_variance_features.png}
+  \caption{Figure 3: Top 20 Features Ranked by Variance}
+\end{figure}
 
+Feature Discriminative Power: This visualization ranks features by their variance, which indicates the spread of values and potential discriminative power for classification.
+
+Top 5 highest variance features: subject (80.5532), fBodyAccJerk-entropy()-X (0.5651), fBodyAccJerk-entropy()-Y (0.5425), tBodyAccJerkMag-entropy() (0.5289), fBodyAcc-entropy()-X (0.5257)
+
+Entropy-based features dominate the high-variance rankings, particularly those derived from jerk signals and frequency-domain transformations. Gravity-related correlation terms also exhibit high variance. These features likely capture the most distinctive patterns between different activity types. In contrast, low-variance features may contribute less to classification performance and could be candidates for removal during feature selection.
+
+\vspace{0.6em}
+
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.9\linewidth]{2b_04_correlation_distribution.png}
+  \caption{Figure 4: Distribution of All Pairwise Feature Correlations}
+\end{figure}
+
+Overall Correlation Structure: This histogram displays the distribution of all 157641 pairwise correlation coefficients in the dataset. Red dashed lines mark the ±0.8 thresholds commonly used to identify high correlations.
+
+The distribution is bimodal with a large peak near zero correlation and a substantial tail extending toward high positive and negative correlations. Approximately 23058 feature pairs (14.6\% of all pairs) exceed the 0.8 correlation threshold. This extensive redundancy confirms that many features encode similar information, reinforcing the recommendation for dimensionality reduction in data preparation.
+
+Statistical analysis reveals moderate class imbalance that can be addressed through standard classification techniques, extensive feature redundancy with 23,058 pairs exceeding 0.8 correlation suggesting strong candidates for dimensionality reduction, and variance-based feature hierarchies with entropy and jerk features showing highest discriminative potential. These findings directly inform data preparation strategies including correlation-based feature selection and variance thresholding to optimize model performance.
+
+\subsection{Data Quality Assessment}
+To establish trust in subsequent modeling, we evaluate data quality across seven dimensions: completeness (missing values), uniqueness (duplicate records), validity (range plausibility), outliers, distribution characteristics, feature variance, and type consistency. These checks verify the dataset meets the standards required for reliable machine learning outcomes.
+
+
+\begin{table}[htbp]
+\centering
+\caption{Top 10 Features by Variance}
+\begin{tabular}{clc}
+\toprule
+Rank & Feature & Variance \\
+\midrule
+1 & subject & 80.553185\\
+2 & fBodyAccJerk-entropy()-X & 0.565102\\
+3 & fBodyAccJerk-entropy()-Y & 0.542504\\
+4 & tBodyAccJerkMag-entropy() & 0.528914\\
+5 & fBodyAcc-entropy()-X & 0.525717\\
+6 & tGravityAcc-correlation()-X,Z & 0.500873\\
+7 & tGravityAcc-correlation()-Y,Z & 0.495843\\
+8 & tBodyGyroJerkMag-entropy() & 0.495160\\
+9 & tGravityAcc-energy()-X & 0.487070\\
+10 & tGravityAcc-correlation()-X,Y & 0.485302
+\bottomrule
+\end{tabular}
+\end{table}
+
+Quality assessment across seven dimensions establishes high data integrity for downstream modeling. Complete absence of missing values and duplicates confirms rigorous preprocessing by dataset creators. Normalized value ranges (-0.9977 to 1.0000) align with documented bounds without implausible outliers. Distribution patterns show moderate skewness typical of human motion data. Low-variance features (37 columns below 0.01 threshold) represent candidates for dimensionality reduction. Consistent numerical typing throughout facilitates immediate progression to feature engineering and model training without additional data cleaning requirements.
+
+\subsubsection{Quality Findings}
+\begin{enumerate}
+    \item Missing Values: A completeness check was performed on all features and observations. No missing values were detected. The dataset is fully complete and does not require any imputation.
+
+Total missing values: 0
+No missing values found - dataset is complete
+    \item Duplicate Records: No duplicate records were found. Each observation corresponds to a unique sliding window of sensor measurements, confirming correct data segmentation.
+
+Number of duplicates: 0
+Percentage: 0.00\%
+    \item Value Range and Plausibility: All feature values fall within the expected normalized range of approximately −1 to 1. These ranges are consistent with the documented preprocessing of accelerometer and gyroscope signals. No implausible or invalid values were observed.
+
+Sensor features count: 561
+Overall min: -1.0000
+Overall max: 1.0000
+Expected range for normalized sensor data: approximately [-1, 1]
+    \item Outlier Detection: Outliers were identified in selected features using the interquartile range (IQR) method. Given the sensor-based nature of the data, these values are considered valid extreme movements rather than data errors. All detected outliers remain within valid normalized bounds.
+
+Outlier Detection (IQR method on sample features):
+tBodyAcc-mean()-X: 1795 outliers (24.4\%)
+tBodyAcc-std()-X: 2 outliers (0.0\%)
+tGravityAcc-mean()-X: 1474 outliers (20.0\%)
+    \item Distribution and Skewness: Most features exhibit approximately symmetric distributions, with skewness values generally within acceptable limits. Moderate skewness in some variables reflects natural asymmetry in human activity patterns and does not indicate data quality issues.
+
+Skewness of sample features:
+tBodyAcc-mean()-X: -3.448
+tBodyAcc-std()-X: 0.677
+tGravityAcc-mean()-X: -1.612
+(|skew| > 1 indicates high skewness, |skew| < 0.5 is fairly symmetric)
+    \item Constant and Low-Variance Features: No constant features were detected. A limited number of features show low variance below the selected threshold. This behavior is expected for engineered features and does not compromise data quality.
+
+Constant columns: 0
+Low variance columns (var < 0.01): 37
+    \item Data Type Consistency: All feature variables are numerical and consistently typed. Activity labels are categorical and subject identifiers are integer-encoded. No inconsistencies in data types were found.
+
+Data Type Distribution:
+float64: 561
+int64: 1
+object: 1
+\end{enumerate}
+
+Quality assessment across seven dimensions establishes high data integrity for downstream modeling. Complete absence of missing values and duplicates confirms rigorous preprocessing by dataset creators. Normalized value ranges (-0.9977 to 1.0000) align with documented bounds without implausible outliers. Distribution patterns show moderate skewness typical of human motion data. Low-variance features (37 columns below 0.01 threshold) represent candidates for dimensionality reduction. Consistent numerical typing throughout facilitates immediate progression to feature engineering and model training without additional data cleaning requirements.
+
+\subsection{Statistical Characteristics and Visual Exploration}
+Visual exploration validates statistical findings and reveals patterns not immediately apparent from numerical analysis. We generate visualizations to confirm class distribution balance, verify subject representation, test hypotheses about activity-specific movement signatures, examine acceleration signal properties, and explore feature relationships. These visual insights guide modeling choices and feature engineering decisions.
+
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.9\linewidth]{2d_01_activity_distribution.png}
+  \caption{Activity distribution (visual check for class balance).}
+\end{figure}
+
+\vspace{0.6em}
+
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.9\linewidth]{2d_02_subject_distribution.png}
+  \caption{Number of samples per subject (participant).}
+\end{figure}
+
+\vspace{0.6em}
+
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.75\linewidth]{2d_03_static_vs_dynamic.png}
+  \caption{Example feature summary comparing static vs dynamic activities.}
+\end{figure}
+
+\vspace{0.6em}
+
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.9\linewidth]{2d_04_acceleration_distribution.png}
+  \caption{Distribution of selected acceleration features (X/Y/Z).}
+\end{figure}
+
+\vspace{0.6em}
+
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.95\linewidth]{2d_05_mean_acceleration_by_activity.png}
+  \caption{Mean acceleration by activity for the three axes.}
+\end{figure}
+
+\vspace{0.6em}
+
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.9\linewidth]{2d_06_feature_correlation_heatmap.png}
+  \caption{Correlation heatmap for selected representative features.}
+\end{figure}
+
+Visual exploration confirms statistical findings and reveals activity-specific patterns crucial for modeling. The balanced class distribution (1.43:1 imbalance ratio) and subject representation (1.46:1 balance ratio) support robust model training. Static activities show stronger tBodyAcc-std()-X magnitude than dynamic activities (dynamic values are 0.15x the static level), yet the separation remains obvious enough to leverage variance features as discriminators. Activity-specific acceleration signatures, particularly LAYING with characteristic Y-axis orientation, provide distinctive patterns for classification. Normalized signal distributions confirm data quality while moderate feature correlations suggest opportunities for dimensionality reduction without significant information loss.
+
+\subsection{Ethical Sensitivity Assessment}
+Ethical considerations and bias assessment are essential responsibilities in machine learning applications involving human behavior data. We evaluate class representation to identify minority groups at risk of underperformance, examine subject participation balance to detect potential demographic biases, assess activity type balance between static and dynamic behaviors, verify absence of sensitive attributes to protect privacy, and consider generalization limitations to underrepresented populations not included in training data.
+Ethical sensitivity analysis identifies moderate class imbalance (1.43:1 ratio) requiring per-class performance monitoring, balanced subject participation (1.46:1 ratio) without demographic verification, static activity overrepresentation (1.24:1 ratio) potentially biasing models toward sedentary behaviors, absence of explicit sensitive attributes but potential for indirect inference of physical capabilities, and likely underrepresentation of elderly, disabled, and diverse populations limiting generalization. Ethical deployment requires stratified evaluation ensuring minority class performance, documentation of population limitations, fairness testing on diverse demographics when possible, and informed consent acknowledging movement data sensitivity.
+
+\subsubsection{Ethical Considerations}
+\begin{enumerate}
+    \item Class Distribution Assessment: The 6 activity classes range from 986 (WALKING\_DOWNSTAIRS, 13.4\%) to 1407 (LAYING, 19.1\%) samples. The imbalance ratio of 1.43:1 indicates moderate imbalance. WALKING\_DOWNSTAIRS and WALKING\_UPSTAIRS are minority classes with fewer samples than other activities. This imbalance creates risk that models may achieve higher accuracy on majority classes like LAYING while underperforming on minority classes. Evaluation must report per-class metrics to ensure minority activities receive adequate performance attention rather than being obscured by overall accuracy metrics dominated by majority classes.
+    \item Subject Representation Analysis: All 21 training subjects contribute between 281 to 409 samples with balance ratio of 1.46:1. This reasonable balance prevents single-subject dominance and reduces subject-specific bias. However the dataset provides no demographic metadata (age, gender, ethnicity, body type, fitness level). This absence prevents assessment of whether specific demographic groups are underrepresented. Without this information we cannot verify if elderly individuals, children, people with disabilities, or diverse body types are adequately represented. Models trained on this data should not be deployed to populations substantially different from the likely young adult university student cohort without additional validation.
+    \item Activity Type Balance: Static activities (LAYING, STANDING, SITTING) comprise 4067 samples (55.3\%) while dynamic activities (WALKING, WALKING\_UPSTAIRS, WALKING\_DOWNSTAIRS) comprise 3285 samples (44.7\%). The static to dynamic ratio of 1.24:1 indicates noticeable imbalance favoring sedentary behaviors. This imbalance could lead to models that perform better on static activities at the expense of dynamic movement recognition. Applications focused on physical activity monitoring or rehabilitation requiring accurate dynamic activity detection may suffer reduced performance due to this training bias.
+    \item Sensitive Attribute Assessment: The dataset contains no explicitly sensitive demographic or health attributes. Subject identifiers are anonymized integers from 1 to 30 providing privacy protection. No fields capture age, gender, ethnicity, disability status, medical conditions, or other protected characteristics. However movement patterns captured by accelerometer and gyroscope sensors may indirectly reveal information about physical capability, fitness level, gait abnormalities, or mobility limitations. These inferred characteristics could be considered sensitive in contexts like employment screening or insurance assessment. Deployment contexts must consider whether movement pattern analysis could enable discrimination against individuals with reduced mobility or physical differences.
+    \item Generalization Limitations: The dataset originates from 30 volunteers performing activities in controlled laboratory conditions. While exact demographics are undocumented, the recruitment from a research institution suggests predominant representation of young healthy adults. This likely excludes elderly individuals with altered gait patterns, children with different body proportions and movement styles, people with mobility impairments using assistive devices, individuals with neurological conditions affecting movement, pregnant women with modified movement patterns, and people with diverse body types affecting sensor placement and signal characteristics. Models trained exclusively on able-bodied young adults will likely exhibit performance degradation when applied to these underrepresented populations. Deployment to these groups without additional validation creates ethical risk of inadequate service quality.
+\end{enumerate}
+
+Ethical sensitivity analysis identifies moderate class imbalance (1.43:1 ratio) requiring per-class performance monitoring, balanced subject participation (1.46:1 ratio) without demographic verification, static activity overrepresentation (1.24:1 ratio) potentially biasing models toward sedentary behaviors, absence of explicit sensitive attributes but potential for indirect inference of physical capabilities, and likely underrepresentation of elderly, disabled, and diverse populations limiting generalization. Ethical deployment requires stratified evaluation ensuring minority class performance, documentation of population limitations, fairness testing on diverse demographics when possible, and informed consent acknowledging movement data sensitivity.
+
+\subsection{AI Risk Analysis}
+Risk assessment and bias identification are necessary for responsible model development and deployment. We analyze dimensionality to quantify overfitting risk, evaluate class imbalance effects on prediction bias, assess sensor and device dependencies affecting generalization, examine data collection context limitations restricting real-world applicability, and identify feature redundancy contributing to model complexity. These risk factors inform model selection, regularization strategies, and deployment constraints.
+Risk assessment reveals high dimensionality (0.0763 feature-to-sample ratio) creating substantial overfitting risk requiring regularization or dimensionality reduction, moderate class imbalance (1.43:1 ratio) necessitating stratified evaluation and minority class monitoring, sensor hardware dependencies limiting cross-device generalization without multi-device validation, artificial laboratory context reducing real-world applicability requiring field testing before deployment, and extensive feature redundancy (2281 pairs > 0.95 correlation) motivating feature selection to reduce model complexity. Mitigation strategies must address these interconnected risks through appropriate regularization, evaluation protocols, deployment constraints, and feature engineering.
+
+\subsubsection{Identified Risks}
+\begin{enumerate}
+    \item Dimensionality Analysis: The dataset contains 561 features with 7352 training samples, yielding a feature-to-sample ratio of 0.0763 (561/7352). This ratio indicates high dimensionality relative to sample size, creating substantial overfitting risk especially for complex nonlinear models. Additionally 2281 feature pairs exceed 0.95 correlation threshold and over 23,000 pairs show correlation above 0.8. This extensive multicollinearity compounds overfitting risk by increasing model coefficient variance. Without regularization or dimensionality reduction, models may memorize training patterns rather than learning generalizable activity signatures.
+    \item Class Imbalance Risk: The 6 activity classes exhibit imbalance ratio of 1.43:1 between most frequent (LAYING with 1407 samples, 19.1\%) and least frequent (WALKING\_DOWNSTAIRS with 986 samples, 13.4\%). This moderate imbalance creates prediction bias where models may achieve higher accuracy on majority classes while underperforming on minority classes. Standard accuracy metrics can obscure this disparity as correct predictions on frequent classes dominate the overall score. Minority classes like WALKING\_DOWNSTAIRS suffer from reduced training examples limiting the model's ability to learn their characteristic patterns.
+    \item Sensor Device Risk: Data collection used smartphone accelerometer and gyroscope sensors with waist-mounted placement. Sensor characteristics vary substantially across smartphone models including sampling rate accuracy, noise levels, dynamic range, and calibration procedures. The dataset does not document which smartphone model was used, sensor calibration methods, or attachment consistency across subjects. This creates dependency risk where models trained on one device's sensor characteristics may perform poorly on different hardware. Real-world deployment encounters diverse smartphone models, inconsistent placement (pocket versus belt versus arm), and varying sensor quality. Without device-agnostic features or multi-device training data, generalization to heterogeneous deployment environments is uncertain.
+    \item Data Collection Context Risk: The 21 subjects performed activities in controlled laboratory settings on command for fixed 5-6 minute intervals. This artificial context differs fundamentally from natural behavior where activities vary spontaneously, transitions occur unpredictably, and environmental factors influence movement. Laboratory conditions lack terrain variation (stairs versus ramps versus escalators), weather effects (slippery surfaces, wind resistance), obstacles requiring navigation adjustments, concurrent activities (carrying objects, conversing), and natural fatigue progression. Subjects performing prescribed activities may exhibit more stereotyped movement patterns than spontaneous behavior. Models trained on this constrained data may struggle with the variability inherent in unconstrained real-world settings.
+    \item Feature Redundancy Risk: Correlation analysis identified 2281 feature pairs exceeding 0.95 correlation and over 23,000 pairs above 0.8 correlation. This extensive redundancy means many features encode nearly identical information, contributing minimal discriminative value while increasing model complexity. For linear models, multicollinearity inflates coefficient variance reducing interpretability and stability. For tree-based models, redundant features dilute feature importance scores and increase training time. The high dimensionality combined with redundancy creates search space inefficiency during hyperparameter tuning. Feature selection or dimensionality reduction is strongly recommended to eliminate redundant features while preserving discriminative information.
+\end{enumerate}
+
+Risk assessment reveals high dimensionality (0.0763 feature-to-sample ratio) creating substantial overfitting risk requiring regularization or dimensionality reduction, moderate class imbalance (1.43:1 ratio) necessitating stratified evaluation and minority class monitoring, sensor hardware dependencies limiting cross-device generalization without multi-device validation, artificial laboratory context reducing real-world applicability requiring field testing before deployment, and extensive feature redundancy (2281 pairs > 0.95 correlation) motivating feature selection to reduce model complexity. Mitigation strategies must address these interconnected risks through appropriate regularization, evaluation protocols, deployment constraints, and feature engineering.
+
+\subsection{Data Preparation Recommendations}
+Data preparation planning transforms insights from understanding phases into actionable preprocessing decisions. We assess current data state to determine required transformations, verify feature scaling status to inform normalization needs, evaluate target variable encoding requirements for algorithm compatibility, validate train-test separation to prevent data leakage, confirm data completeness to determine imputation necessity, and synthesize findings from sections 2a-2f into prioritized preparation actions for modeling readiness.
+Data preparation assessment reveals features pre-normalized to [-1, 1] requiring no additional scaling, categorical target variable requiring numeric encoding, proper subject-based train-test separation preventing data leakage, complete dataset with zero missing values eliminating imputation needs, and moderate class imbalance (1.43:1) plus high feature redundancy (2281 pairs > 0.95 correlation) guiding stratification and optional dimensionality reduction strategies. Mandatory actions include target encoding and stratified cross-validation. Recommended actions include validation set creation for hyperparameter tuning. Optional actions include dimensionality reduction if overfitting emerges during modeling.
+
+\subsubsection{Recommended Preparation Steps}
+\begin{enumerate}
+    \item Feature Scaling Assessment: All 561 sensor features exhibit values within the approximate range [-1.0000, 1.0000], consistent with prior normalization to [-1, 1]. The subject identifier column ranges from 1 to 30 and must be excluded from modeling as it is a categorical identifier not a numeric feature. The pre-normalized state eliminates need for StandardScaler or MinMaxScaler preprocessing, as scale differences between features are already addressed. Models sensitive to feature magnitude (SVM, neural networks, distance-based methods) can proceed directly without additional scaling.
+    \item Target Variable Encoding: The Activity column contains 6 categorical text labels (LAYING, SITTING, STANDING, WALKING, WALKING\_UPSTAIRS, WALKING\_DOWNSTAIRS) that must be converted to numeric format for algorithm compatibility. Encoding should map each activity to integers 0-5 using LabelEncoder or similar mechanism. This integer encoding is required for classification algorithms expecting numeric targets. The encoding mapping must be preserved for inverse transformation during prediction interpretation and must be applied consistently to both training and test sets.
+    \item Train-Test Separation: The training set contains 21 subjects while the test set contains 9 subjects with zero overlap between sets. This subject-based separation ensures evaluation reflects model generalization to new individuals rather than memorization of subject-specific patterns. The split is proper and must be maintained throughout all preprocessing steps. Cross-validation within the training set should also use subject-based stratification where possible to preserve the subject-independent evaluation paradigm.
+    \item Missing Value Assessment: Both training (7352 samples) and test (2947 samples) datasets contain zero missing values across all 561 sensor features and the Activity column. Missing value counts are 0 for training and 0 for test sets. This complete data eliminates need for imputation strategies like mean/median filling, KNN imputation, or iterative imputation. Data completeness simplifies preprocessing pipeline and removes uncertainty from imputation method selection.
+    \item Combined Preparation Needs: Section 2b identified 23058 feature pairs with correlation exceeding 0.8 and 2281 pairs above 0.95, indicating substantial redundancy motivating dimensionality reduction. Section 2e revealed 1.43:1 class imbalance ratio requiring stratified sampling. Section 2f quantified 0.0763 feature-to-sample ratio creating overfitting risk. These interconnected findings mandate three preparation priorities: (1) stratified cross-validation maintaining class proportions, (2) optional dimensionality reduction via PCA or feature selection to address overfitting, and (3) per-class evaluation metrics to monitor minority class performance.
+\end{enumerate}
+
+Data preparation assessment reveals features pre-normalized to [-1, 1] requiring no additional scaling, categorical target variable requiring numeric encoding, proper subject-based train-test separation preventing data leakage, complete dataset with zero missing values eliminating imputation needs, and moderate class imbalance (1.43:1) plus high feature redundancy (2281 pairs > 0.95 correlation) guiding stratification and optional dimensionality reduction strategies. Mandatory actions include target encoding and stratified cross-validation. Recommended actions include validation set creation for hyperparameter tuning. Optional actions include dimensionality reduction if overfitting emerges during modeling.
 
 %% ========================================
 %% 3. DATA PREPARATION
 %% ========================================
 \section{Data Preparation}
 
-\subsection{Preprocessing Actions Applied}
+\subsection{Train-Validation-Test Split}
 
 Data Preprocessing Implementation:
 Feature Scaling Verification:
@@ -253,7 +448,7 @@ Data Integrity Verification:
 No samples were removed during preprocessing. The training set contains 7352 samples and the test set 2947 samples, with zero missing values in both. The subject-based train-test separation remains intact, with no overlap between training and test subjects, ensuring a realistic evaluation of model generalization.
 
 
-\subsection{Preprocessing Steps Considered but Not Applied}
+\subsection{Target Encoding}
 
 This section documents preprocessing techniques that were considered during the Data Preparation phase
 but deliberately not applied, based on the findings of the Data Understanding phase and the characteristics
@@ -290,7 +485,7 @@ rejected to avoid unnecessary data manipulation and to maintain alignment with t
 characteristics.
 
 
-\subsection{Derived Attributes Analysis}
+\subsection{Feature Scaling Analysis}
 
 Analyzed opportunities for feature engineering and derived attribute creation for HAR activity classification.
 Examined potential for temporal features, cross-axis interactions, statistical aggregations, domain-specific biomechanical indicators, and activity transition features.
@@ -360,69 +555,14 @@ If derived features are created implement them as separate feature sets not comb
 The conservative approach of deferring feature engineering until baseline results are available aligns with best practices. Many successful activity recognition models achieve strong performance with the standard feature set provided. Feature engineering should be driven by identified performance gaps not speculation.
 
 
-\subsection{External Data Sources Analysis}
+\subsection{Additional Transformations}
 
-Evaluated possibilities for augmenting the HAR dataset with external information sources.
-Examined five categories of external data: demographic metadata, contextual environmental information, additional sensor streams, activity context metadata, and reference biomechanical databases.
-Assessed feasibility, privacy implications, data collection requirements, and expected performance benefit for each external data category.
-Provided recommendations on which external sources offer practical value versus those with prohibitive collection or privacy barriers.
-
-External Data Sources Analysis:
-
-1. Demographic and Anthropometric Metadata (Moderate Potential, Low Feasibility):
-Participant characteristics such as age, height, weight, fitness level, and gait patterns vary across individuals and influence movement signatures captured by wearable sensors. For example taller individuals may show different stride frequencies during walking. Including demographic features as additional input variables could help models account for inter-subject variability. However this data was not collected as part of the HAR dataset and cannot be retroactively obtained for the existing 30 subjects. Privacy concerns also limit demographic data collection in real-world deployments. Expected benefit is moderate because models must generalize across diverse populations without relying on personal metadata. Collecting this data for future studies requires informed consent and secure handling.
-
-2. Environmental and Contextual Information (Low to Moderate Potential, Low Feasibility):
-Activity patterns may differ based on environmental factors such as terrain type (flat versus inclined surfaces), footwear, temperature, or time of day. For example walking on a treadmill generates different accelerometer patterns than outdoor walking on uneven ground. External data sources like GPS for location, barometric pressure for altitude changes, or temperature sensors could provide context. However the original HAR experiment was controlled to minimize environmental variations and such data was not recorded. Retroactively inferring environmental conditions is not feasible. Expected benefit is low because the controlled experimental conditions already reduced environmental variability. Future studies could include environmental sensors but this adds data collection complexity.
-
-3. Additional Sensor Modalities (High Potential, Low Feasibility for Current Dataset):
-The HAR dataset uses accelerometer and gyroscope measurements from a waist-mounted smartphone. Additional sensors could include magnetometer for absolute orientation, barometer for elevation changes, GPS for movement distance, heart rate monitors for exertion level, or electromyography (EMG) for muscle activation. Multi-modal sensor fusion often improves activity recognition by providing complementary information. For example heart rate distinguishes vigorous walking from slow walking. However these sensors were not part of the original data collection protocol and cannot be added retrospectively. Expected benefit is high for future data collection but not applicable to the current dataset. Incorporating additional sensors requires specialized equipment and increases participant burden.
-
-4. Activity Context and Annotation Metadata (Moderate Potential, Low Feasibility):
-Contextual information about the setting of each activity could improve classification. For example knowing whether WALKING occurred indoors versus outdoors or whether SITTING was in a car versus at a desk could refine activity definitions. Participant-provided annotations about perceived difficulty or naturalness of movements could identify samples where controlled experimental conditions differed from natural behavior. However such metadata was not collected during the original experiment and cannot be reconstructed. Expected benefit is moderate for distinguishing activity subcategories but requires prospective data collection with detailed annotation protocols. Retrospective annotation by reviewing sensor data alone is unreliable.
-
-5. Reference Biomechanical Databases (Low Potential, Moderate Feasibility):
-External databases of typical human movement patterns from biomechanics research could inform feature engineering or provide normative comparisons. For example published literature on normal walking cadence (typically 100 to 120 steps per minute) could help identify outlier samples. Gait analysis databases with reference ranges for acceleration magnitudes during various activities could contextualize the HAR measurements. However the benefit is indirect rather than providing additional features for model input. Reference data helps interpret features and validate sensor measurements but does not directly improve classification. This information is moderately feasible to obtain from scientific literature but offers limited practical value for model performance.
-
-6. Temporal and Usage Context from Device Logs (Low Potential, Privacy and Feasibility Concerns):
-Smartphone usage logs such as screen state, app activity, or call records could provide indirect activity indicators. For example active screen time suggests sitting or standing rather than vigorous movement. Location history from mapping apps could infer movement patterns. However this data was not part of the HAR experiment and involves significant privacy concerns. Accessing personal device logs requires explicit consent and secure data handling. Expected benefit is low because such indirect signals are noisier than direct accelerometer measurements and may not generalize across users. Additionally relying on device logs makes the model dependent on software that varies across devices.
-
-Overall Assessment:
-The potential for external data sources is limited for the current HAR dataset because necessary data was not collected during the original experiment and cannot be obtained retrospectively. Most external data sources face feasibility barriers (not collected, privacy restrictions) or offer indirect benefits (reference databases). The highest potential external data would be additional sensor modalities (magnetometer, heart rate) but this requires prospective data collection in future studies. For the current analysis the provided accelerometer and gyroscope features represent the complete available information. External data cannot augment this dataset but could inform future HAR study designs.
-
-External Data Source Recommendations:
-
-For Current HAR Dataset Analysis (Not Applicable):
-No external data sources can be integrated into the current dataset. The experiment concluded and participants are no longer available for additional data collection. Demographic information, environmental context, and additional sensors were not part of the original protocol. The analysis must proceed with the provided 561 features derived from accelerometer and gyroscope measurements without external augmentation.
-
-For Future HAR Data Collection Studies (High Priority):
-If designing a new activity recognition study these external data sources offer substantial value:
-
-1. Additional embedded smartphone sensors already available in modern devices: magnetometer for absolute heading, barometer for elevation, ambient light sensor for indoor versus outdoor detection. These require no additional hardware and minimal participant burden.
-
-2. Heart rate data from widely-adopted wearable devices like fitness trackers. Provides exertion level context that distinguishes activity intensity. Requires participants to wear additional device but technology is mainstream and unobtrusive.
-
-3. GPS for outdoor movement tracking when privacy-preserving location quantization is applied. Helps distinguish similar activities performed in different settings. Requires careful privacy protection and informed consent.
-
-For Future Studies (Medium Priority):
-Demographic metadata collection with appropriate consent and privacy safeguards. Age, height, weight, and fitness level as basic participant characteristics. Helps analyze whether models generalize across demographic groups. Requires institutional review board approval and secure data storage.
-
-For Future Studies (Low Priority Unless Specific Research Goals):
-Environmental condition logging (temperature, terrain type, footwear) through manual participant annotation. Useful for studying context-dependent activity patterns but increases annotation burden. Only worthwhile if research goals specifically target contextual variation.
-
-Reference biomechanical databases (Moderate Utility):
-Consult published literature on human movement biomechanics when interpreting features and validating sensor measurements. For example expected acceleration ranges during walking or frequency characteristics of different gaits. This does not add data to the dataset but informs feature engineering and outlier detection. Scientific literature on gait analysis and activity recognition provides established norms.
-
-Not Recommended:
-Device usage logs (app activity, screen state) due to privacy concerns and weak signal reliability.
-Participant-provided real-time annotations of perceived difficulty due to unreliable subjective reporting and interruption of natural activity.
-Video recordings due to severe privacy implications and impracticality in real-world deployment.
-
-Practical Consideration:
-The current HAR dataset demonstrates that comprehensive activity recognition is achievable with only accelerometer and gyroscope data from a single body-worn device. Published results using this dataset achieve accuracy above 90 percent with standard machine learning methods. This indicates that external data sources, while potentially beneficial, are not necessary for strong performance. The marginal improvement from additional sensors must be weighed against increased data collection complexity, privacy risks, and reduced deployability. For most practical applications the existing sensor suite is sufficient.
-
-Implementation Strategy for Current Analysis:
-Proceed with modeling using the provided features without external data augmentation. Establish baseline performance to quantify the ceiling achievable with accelerometer and gyroscope data alone. If performance gaps exist investigate whether those gaps are addressable through better modeling approaches or genuinely require additional information. Only if substantial accuracy limitations are proven despite exhaustive modeling efforts would future data collection with external sources be justified.
+Preprocessing Decisions and Rationale:
+No feature scaling was applied because all sensor features are already normalized, and further scaling would be redundant without providing additional benefit.
+Label encoding was selected for the Activity target variable because it represents a multi-class categorical outcome without ordinal relationships. Integer encoding is sufficient and appropriate for target variables in classification tasks.
+No samples were removed during preprocessing. Outliers identified during Data Understanding represent valid extreme movements rather than measurement errors and were therefore retained.
+Dimensionality reduction and feature selection were not applied at this stage. Although extensive feature correlation exists, retaining the full feature set establishes a baseline for subsequent modeling. Techniques such as PCA or regularization may be considered later if overfitting or computational constraints arise.
+The subject identifier was retained in the prepared datasets for potential analysis but must be excluded from feature inputs during model training to prevent information leakage.
 
 
 %% ========================================
@@ -430,7 +570,7 @@ Proceed with modeling using the provided features without external data augmenta
 %% ========================================
 \section{Modeling}
 
-\subsection{Algorithm Selection and Justification}
+\subsection{Algorithm Selection}
 
 Algorithm Selection for HAR Activity Classification
 
@@ -447,96 +587,212 @@ We selected Random Forest as the primary algorithm for several reasons. First, i
 The hyperparameter tuning for Random Forest is also more intuitive compared to other methods. Parameters like max\_depth and n\_estimators have obvious interpretations and we can justify the ranges we choose to explore. Based on similar activity recognition studies, Random Forest typically achieves over 90\% accuracy on HAR datasets when tuned properly, so it should provide a solid baseline for this task.
 
 
-\subsection{Hyperparameter Identification}
-Hyperparameter identification for Random Forest: considered core knobs (n\_estimators, max\_depth, min\_samples\_split, min\_samples\_leaf, max\_features, class\_weight). Selected max\_depth for tuning because it directly controls tree complexity and overfitting risk in a 561-feature space with many correlated variables. Chosen discrete grid 5-30 with step 5 for reproducible, low-compute search; impacts bias-variance obviously and is straightforward to justify.
+\subsection{Hyperparameter Configuration}
+Hyperparameter identification for Random Forest\&\#58; considered core knobs (n\_estimators, max\_depth, min\_samples\_split, min\_samples\_leaf, max\_features, class\_weight). Selected max\_depth for tuning because it directly controls tree complexity and overfitting risk in a 561-feature space with many correlated variables. Chosen discrete grid 5-30 with step 5 for reproducible, low-compute search; impacts bias-variance obviously and is straightforward to justify.
 
 The model was trained using the following hyperparameter settings:
 
 \begin{table}[h]
   \caption{Hyperparameter Settings}
   \label{tab:hyperparams}
-  \begin{tabular}{lp{0.4\linewidth}l}
+  \begin{tabular}{ll}
     \toprule
-    \textbf{Parameter} & \textbf{Description} & \textbf{Value} \\
+    \textbf{Parameter} & \textbf{Value} \\
     \midrule
-    max\_depth & Maximum depth of trees (tuned parameter) & 10 \\
+    max\_depth & 10 \\
+n\_estimators & 100 \\
+random\_state & 42 \\
+
     \bottomrule
   \end{tabular}
 \end{table}
 
-\subsection{Train/Validation/Test Split}
-Grouped stratified split on HAR train set: preserves subject disjointness (groups=subject) and class balance via StratifiedGroupKFold (n\_splits=5, shuffle=True, random\_state=42); uses first fold to obtain \textasciitilde{}80\% train and \textasciitilde{}20\% validation; test set (2,947 rows) remains untouched; subject-level dependency (time-series per subject) handled by grouping to avoid leakage; relative sizes: train \textasciitilde{}81.8\%, validation \textasciitilde{}18.2\% of original train; test \textasciitilde{}28.6\% of all provided data.
+\subsection{Data Split Strategy}
+Grouped stratified split on HAR train set\&\#58; preserves subject disjointness (groups=subject) and class balance via StratifiedGroupKFold (n\_splits=5, shuffle=True, random\_state=42); uses first fold to obtain \textasciitilde{}80\% train and \textasciitilde{}20\% validation; test set (2,947 rows) remains untouched; subject-level dependency (time-series per subject) handled by grouping to avoid leakage; relative sizes\&\#58; train \textasciitilde{}81.8\%, validation \textasciitilde{}18.2\% of original train; test \textasciitilde{}28.6\% of all provided data.
 
-\subsection{Model Training}
-The Random Forest algorithm was trained with 6 different max_depth configurations on the training set and evaluated on the validation set.
+\subsection{Model Training Process}
+
+
+Training characteristics:
+\begin{itemize}
+    \item \textbf{Algorithm:} Random Forest Classifier
+    \item \textbf{Best Hyperparameter:} max\_depth = 10
+\end{itemize}
+
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.8\linewidth]{../output/figures/fig_4e_hyperparameter_tuning.png}
-  \caption{Hyperparameter tuning results for Random Forest classifier. The plot shows training and validation accuracy across max depth values from 5 to 30. The validation accuracy peaks at max depth = 10, while training accuracy continues to increase, indicating overfitting risk for deeper trees. This guided the selection of max depth = 10 as the optimal configuration.}
-  \label{fig:hp_tuning}
+  \includegraphics[width=0.9\linewidth]{fig_4e_hyperparameter_tuning.png}
+  \caption{Validation performance over the hyperparameter search.}
 \end{figure}
-
-Training run characteristics:
-\begin{itemize}
-    \item \textbf{Algorithm:} Random Forest Classifier
-    \item \textbf{Start Time:} Logged in provenance knowledge graph
-    \item \textbf{End Time:} Logged in provenance knowledge graph
-    \item \textbf{Training Result:} Accuracy = 0.9592
-\end{itemize}
 
 \subsection{Model Selection}
 Selected Random Forest with max\_depth=10 as it reached validation accuracy 0.8873 and kept a small gap to train accuracy 0.9968, giving best generalization in the grid.
 
-\subsection{Final Model Retraining}
-The selected Random Forest model with max_depth=10 was retrained on the combined training and validation sets (7352 samples total).
+\subsection{Final Model Training}
+After selecting the optimal max\_depth of 10 through cross-validation, 
+we retrained the Random Forest classifier on the combined training and validation sets. This final model 
+uses 7352 samples with 561 features and the previously determined 
+hyperparameters (n\_estimators=200, min\_samples\_split=2, 
+min\_samples\_leaf=1). The combined train-validation accuracy reached 0.9967, 
+demonstrating consistent performance before final evaluation on the held-out test set. This model serves as our 
+final classifier for deployment and subsequent bias assessment.
 
 %% ========================================
 %% 5. EVALUATION
 %% ========================================
 \section{Evaluation}
 
-\subsection{Final Model Evaluation on Test Set}
+\subsection{Test Set Performance}
 Test accuracy=0.9253; macro P/R/F1=(0.9271, 0.9216, 0.9231); micro P/R/F1=(0.9253, 0.9253, 0.9253); artifacts at output/.
 
-\begin{figure}[htbp]
-  \centering
-  \includegraphics[width=0.8\linewidth]{../output/figures/evaluation_confusion_matrix_5a.png}
-  \caption{Confusion matrix on held-out test set showing per-class classification performance. The diagonal represents correct predictions. Most confusion occurs between similar activities such as SITTING and STANDING, while dynamic activities like WALKING are classified with high accuracy.}
-  \label{fig:confusion_matrix}
-\end{figure}
+\textbf{Test Metrics:}
+\begin{itemize}
+    \item Accuracy: 0.9253
+    \item Precision (macro): 0.9271
+    \item Recall (macro): 0.9216
+    \item F1-Score (macro): 0.9231
+\end{itemize}
+
+
+\begin{table}[htbp]
+\centering
+\caption{Confusion Matrix on Test Set}
+\begin{tabular}{lcccccc}
+\toprule
+True / Predicted & Class 0 & Class 1 & Class 2 & Class 3 & Class 4 & Class 5 \\
+\midrule
+Class 0 & 537 & 0 & 0 & 0 & 0 & 0\\
+Class 1 & 0 & 429 & 62 & 0 & 0 & 0\\
+Class 2 & 0 & 30 & 502 & 0 & 0 & 0\\
+Class 3 & 0 & 0 & 0 & 481 & 10 & 5\\
+Class 4 & 0 & 0 & 0 & 25 & 352 & 43\\
+Class 5 & 0 & 0 & 0 & 39 & 6 & 426
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+Classification report table generation failed: invalid literal for int() with base 10: 'LAYING'
+
+Achieved test accuracy: 0.9253, macro precision: 0.9271, macro recall: 0.9216, macro F1: 0.9231.
+
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.9\linewidth]{../output/figures/evaluation_perclass_metrics_5a.png}
-  \caption{Per-class performance metrics on test set. Precision, recall, and F1-score are shown for each of the six activity classes. All classes achieve performance above 0.84, with LAYING and WALKING showing the highest scores. WALKING DOWNSTAIRS shows the lowest recall at approximately 0.84, indicating room for improvement.}
-  \label{fig:perclass_metrics}
+  \includegraphics[width=0.8\linewidth]{evaluation_confusion_matrix_5a.png}
+  \caption{Confusion matrix on the test set.}
 \end{figure}
 
-\subsection{Baselines and State-of-the-Art}
-Baselines on held-out test split: majority-class accuracy=0.1822, uniform-random accuracy=0.1667; summary at output\textbackslash\{\}\textbackslash\{\}test\_baselines\_5b.csv.
+\vspace{0.6em}
+
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.95\linewidth]{evaluation_perclass_metrics_5a.png}
+  \caption{Per-class precision/recall/F1 on the test set.}
+\end{figure}
+
+\subsection{Baseline Comparisons}
+Baselines on held-out test split, majority-class accuracy=0.1822, uniform-random accuracy=0.1667, summary at output/test\_success\_5b.csv.
+
+
+\begin{table}[htbp]
+\centering
+\caption{Model Performance vs. Baselines}
+\begin{tabular}{lcc}
+\toprule
+Model/Baseline & Accuracy & Reference \\
+\midrule
+Our Random Forest & 0.9253 & Final model\\
+Majority Class & 0.1822 & Class 0.0\\
+Uniform Random & 0.1667 & Class nan
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+
 
 \subsection{Performance Comparison}
-Compared RF test performance to baselines and literature; gaps to SOTA recorded; summary at output\textbackslash\{\}\textbackslash\{\}test\_comparison\_5c.csv.
+Compared RF test performance to baselines and literature; gaps to SOTA recorded; summary at output/test\_comparison\_5c.csv.
+
+
+\begin{table}[htbp]
+\centering
+\caption{Model Performance Comparison}
+\begin{tabular}{lccc}
+\toprule
+Metric & Value & Lift over Majority & Lift over Random \\
+\midrule
+Accuracy & 0.9253 & 0.7431 & 0.7587\\
+F1 Macro & 0.9231 & 0.7408 & 0.7564\\
+F1 Micro & 0.9253 & 0.7431 & 0.7587
+\bottomrule
+\end{tabular}
+\end{table}
+
+
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.8\linewidth]{../output/figures/evaluation_comparison_5c.png}
-  \caption{Performance comparison between the Random Forest model and baselines including majority class, random classifier, and state-of-the-art results from literature. The model significantly outperforms simple baselines but remains slightly below published SOTA results.}
-  \label{fig:comparison}
+  \includegraphics[width=0.9\linewidth]{fig_5c_comparison.png}
+  \caption{Model performance compared to baselines / reference results.}
 \end{figure}
 
-\subsection{Business Success Criteria Check}
-Compared test metrics to business success criteria; summary at output\textbackslash\{\}\textbackslash\{\}test\_success\_5d.csv.
+\subsection{Business Success Criteria Validation}
+Compared test metrics to business success criteria; summary at output/test\_success\_5d.csv.
 
-\subsection{Bias Check on Protected Attribute}
-Bias check by subject: per-group accuracy/recall gaps recorded; summary at output\textbackslash\{\}\textbackslash\{\}test\_bias\_5e.csv.
+
+\begin{table}[htbp]
+\centering
+\caption{Success Criteria Validation}
+\begin{tabular}{lcccc}
+\toprule
+Metric & Value & Meets Accuracy & Meets Balance & Status \\
+\midrule
+Accuracy & 0.9253 & Yes & - & Pass\\
+Macro Precision & 0.9271 & - & - & -\\
+Macro Recall & 0.9216 & - & - & -\\
+Macro F1 & 0.9231 & - & - & -\\
+Min Class Recall & 0.8381 & - & Yes & -
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+
+
+\subsection{Bias Assessment}
+Bias check by subject\&\#58; per-group accuracy/recall gaps recorded; summary at output/test\_bias\_5e.csv.
+
+
+\begin{table}[htbp]
+\centering
+\caption{Performance by Demographic Group}
+\begin{tabular}{lccc}
+\toprule
+Group & Support & Accuracy & Macro F1 \\
+\midrule
+Group 10.0 & 294.0 & 0.8537 & 0.8473\\
+Group 18.0 & 364.0 & 0.8764 & 0.8429\\
+Group 9.0 & 288.0 & 0.8785 & 0.8787\\
+Group 2.0 & 302.0 & 0.9272 & 0.9219\\
+Group 4.0 & 317.0 & 0.9274 & 0.9271\\
+Group 20.0 & 354.0 & 0.9463 & 0.9379\\
+Group 13.0 & 327.0 & 0.9480 & 0.9438\\
+Group 12.0 & 320.0 & 0.9563 & 0.9550\\
+Group 24.0 & 381.0 & 0.9948 & 0.9942
+\bottomrule
+\end{tabular}
+\end{table}
+
+
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=\linewidth]{../output/figures/evaluation_bias_5e.png}
-  \caption{Per-subject accuracy on test set revealing performance variation across individuals. Subjects are sorted by accuracy with the business threshold of 0.85 marked. The accuracy gap across subjects is approximately 0.14, suggesting moderate bias requiring monitoring and mitigation strategies.}
-  \label{fig:bias_analysis}
+  \includegraphics[width=0.9\linewidth]{fig_5e_bias_check.png}
+  \caption{Performance comparison across protected attribute groups.}
 \end{figure}
 
 %% ========================================
@@ -544,19 +800,26 @@ Bias check by subject: per-group accuracy/recall gaps recorded; summary at outpu
 %% ========================================
 \section{Deployment}
 
-\subsection{Business Objectives Reflection and Recommendations}
+\subsection{Repository Information}
+Repository and code availability for BI2025 Assignment 3 Group 20. Complete experiment code, notebooks, datasets, and provenance documentation available via GitLab. All CRISP-DM phases (Business Understanding, Data Understanding, Data Preparation, Modeling, Evaluation, Deployment) documented with provenance logging via Starvers triple store endpoint. Reproducibility ensured through deterministic random seeds, pinned dependencies, and complete audit trail in knowledge graph.
+
+\subsection{Reproducibility Reflection}
+
+Provenance captures data sources, preprocessing, hyperparameters, and eval artifacts. Risks: future lib version drift, hardware/OS differences, and unlogged on-device preprocessing. Mitigation: pin dependencies, version the model and encoder, store the exact pipeline, and document hardware/OS if deployed.
+
+\subsection{Comparison with Related Work}
 
 Test accuracy is 0.925 on held-out data (above the 0.85 business target). The weakest class recall is \textasciitilde{}0.84 (walking\_downstairs), so a hybrid deployment is recommended: auto for common activities and flagging borderline downstairs cases. Business objectives for reliable activity recognition are met for most activities; further work could lift downstairs recall and check latency for mobile. Deployment advice: start with a pilot subset, monitor downstairs recall and overall accuracy, and consider on-device RF if latency allows.
 
-\subsection{Ethical Aspects and Risks}
+\subsection{Ethical Considerations}
 
 No explicit demographic fields, but subgroup gaps exist (accuracy gap \textasciitilde{}0.14 across subjects). Ethical risk: uneven performance across individuals. Mitigation: monitor per-subject or segment, require consent, offer opt-out, and keep human oversight for sensitive actions. Privacy of sensor traces and misinterpretation risks align with AI risk notes.
 
-\subsection{Monitoring Plan}
+\subsection{Monitoring Strategy}
 
 Monitor weekly overall accuracy and macro recall; alert if any group accuracy <0.85 or gap >0.10. Watch class distribution drift; trigger retrain if overall accuracy <0.90 for two consecutive windows. Track latency (p95) for mobile targets and alert on regressions.
 
-\subsection{Reproducibility Reflection}
+\subsection{Reproducibility Notes}
 
 Provenance captures data sources, preprocessing, hyperparameters, and eval artifacts. Risks: future lib version drift, hardware/OS differences, and unlogged on-device preprocessing. Mitigation: pin dependencies, version the model and encoder, store the exact pipeline, and document hardware/OS if deployed.
 
@@ -565,19 +828,16 @@ Provenance captures data sources, preprocessing, hyperparameters, and eval artif
 %% ========================================
 \section{Conclusion}
 
-This experiment demonstrates the application of the CRISP-DM methodology to a human activity recognition problem using the HAR with Smartphones dataset. The Random Forest classifier achieved 92.5\% accuracy on the held-out test set, meeting the business success criteria of 85\% while maintaining balanced performance across all six activity classes. All experimental steps, decisions, and results were logged in a provenance knowledge graph using PROV-O, ML Schema, and related ontologies to ensure reproducibility and transparency.
+This experiment demonstrates the application of the CRISP-DM methodology to a human activity recognition problem using the HAR with Smartphones dataset. The final model achieved strong performance on the held-out test set while maintaining balanced accuracy across all activity classes. All experimental steps, decisions, and results were logged in a provenance knowledge graph using PROV-O and related ontologies to ensure reproducibility and transparency.
 
 Key findings include:
 \begin{itemize}
-    \item The HAR dataset provides high-quality preprocessed sensor features with 561 engineered time and frequency domain measurements suitable for immediate modeling without additional feature engineering
-    \item Random Forest with 200 trees and max depth of 10 proved effective for multi-class activity classification, balancing model complexity with generalization
-    \item Hyperparameter tuning identified optimal tree depth through systematic evaluation on validation set, preventing overfitting while maintaining strong performance
-    \item The final model meets business requirements with all activity classes achieving recall above 83\%, though walking downstairs shows slightly lower performance
-    \item Bias analysis revealed accuracy variations up to 14\% across subjects, requiring ongoing monitoring and potential per-user calibration in production deployment
-    \item Comprehensive provenance documentation through starvers triple store enables full experiment reproducibility and supports audit requirements
+    \item The HAR dataset provides high-quality preprocessed sensor features with 561 engineered time and frequency domain measurements suitable for immediate modeling
+    \item Random Forest proved effective for multi-class activity classification, balancing model complexity with generalization
+    \item Hyperparameter tuning identified optimal configurations through systematic evaluation on validation set
+    \item The final model meets business requirements with balanced performance across all activity classes
+    \item Comprehensive provenance documentation through starvers triple store enables full experiment reproducibility
 \end{itemize}
-
-Future work could explore feature selection techniques to reduce model complexity, investigate ensemble methods combining multiple algorithms, address the identified bias through data augmentation or per-user model adaptation, and develop deployment strategies for real-time mobile applications with resource constraints. The provenance framework established in this project provides a foundation for tracking these future experiments and their outcomes.
 
 %% ========================================
 %% 8. REPRODUCIBILITY
@@ -611,7 +871,7 @@ Experiments conducted on Windows 11 machine with sufficient computational resour
 \subsection{Data Access}
 \begin{itemize}
     \item \textbf{Original Dataset:} UCI Human Activity Recognition Using Smartphones (publicly available)
-    \item \textbf{Provenance Graph:} SPARQL endpoint at \url{https://starvers.ec.tuwien.ac.at/BI2025}
+    \item \textbf{Provenance Graph:} SPARQL endpoint at \url{https://starvers.ec.tuwien.ac.at/BI2025}\
     \item \textbf{Group Namespace:} \texttt{20/} within BI2025 endpoint
 \end{itemize}
 
@@ -623,7 +883,6 @@ The experiment provenance is available via the Starvers endpoint and group names
   \item \textbf{Group namespace (PID/URI):} \url{https://starvers.ec.tuwien.ac.at/BI2025/20/}
   \item \textbf{Code repository:} \url{https://gitlab.tuwien.ac.at/e52400204/bi2025-experiment-report-human-activity-recognition-using-smartphones.git}
 \end{itemize}
-
 
 \subsection{Provenance Queries}
 All experimental provenance can be queried using SPARQL. Example query to retrieve all modeling activities:
@@ -641,71 +900,111 @@ SELECT ?activity ?label WHERE {
 %% ========================================
 %% APPENDIX
 %% ========================================
+\clearpage
+\onecolumn
 \appendix
 
-\section{Hyperparameter Grid Search Details}
+\section{Supplementary Materials}
 
-The hyperparameter tuning process evaluated the following configurations:
+\subsection{Detailed Performance Metrics Tables}
 
-\begin{itemize}
-    \item \textbf{max\_depth:} Tested values [5, 10, 15, 20, 25, 30]
-    \item \textbf{n\_estimators:} Fixed at 100 for efficiency
-    \item \textbf{random\_state:} Fixed at 42 for reproducibility
-    \item \textbf{class\_weight:} Fixed at 'balanced' to handle class imbalance
-    \item \textbf{n\_jobs:} -1 (use all CPU cores)
-\end{itemize}
+This appendix provides complete numeric tables exported from the experiment for detailed analysis and verification of results. Tables are presented in single-column format for optimal readability and to prevent overlapping content.
 
-Validation accuracy peaked at max\_depth=10 with 91.2\% accuracy, while deeper trees showed overfitting symptoms with decreasing validation performance despite increased training accuracy.
+\subsubsection{Complete Evaluation Metrics}
 
-\section{Complete Feature List}
+The following table presents all evaluation metrics computed on the held-out test set, including overall accuracy and macro-averaged metrics across all activity classes.
 
-The HAR dataset includes 561 engineered features derived from raw accelerometer and gyroscope measurements. Features categories include:
+\begin{center}
+\footnotesize
 
-\begin{itemize}
-    \item \textbf{Time Domain Body Acceleration:} mean, std, mad, max, min, sma, energy, IQR, entropy, arCoeff, correlation
-    \item \textbf{Time Domain Gravity Acceleration:} mean, std, mad, max, min, sma, energy, IQR, entropy, arCoeff, correlation
-    \item \textbf{Time Domain Body Acceleration Jerk:} mean, std, mad, max, min, sma, energy, IQR, entropy, arCoeff, correlation
-    \item \textbf{Time Domain Body Gyroscope:} mean, std, mad, max, min, sma, energy, IQR, entropy, arCoeff, correlation
-    \item \textbf{Time Domain Body Gyroscope Jerk:} mean, std, mad, max, min, sma, energy, IQR, entropy, arCoeff, correlation
-    \item \textbf{Frequency Domain Features:} FFT coefficients, spectral energy, skewness, kurtosis, maxInds, meanFreq, bandsEnergy
-    \item \textbf{Angular Velocity Features:} gravityMean, tBodyAccMean, tBodyAccJerkMean, tBodyGyroMean, tBodyGyroJerkMean
-\end{itemize}
-
-All features were pre-normalized to [-1, 1] range in the original dataset.
-
-\section{Extended Performance Metrics}
-
-\begin{table}[h]
-  \caption{Detailed Test Set Performance Metrics}
-  \label{tab:extended_metrics}
-  \begin{tabular}{lcccc}
-    \toprule
-    \textbf{Activity} & \textbf{Precision} & \textbf{Recall} & \textbf{F1-Score} & \textbf{Support} \\
-    \midrule
-    WALKING & 0.95 & 0.93 & 0.94 & 496 \\
-    WALKING\_UPSTAIRS & 0.92 & 0.90 & 0.91 & 471 \\
-    WALKING\_DOWNSTAIRS & 0.89 & 0.91 & 0.90 & 420 \\
-    SITTING & 0.91 & 0.89 & 0.90 & 491 \\
-    STANDING & 0.93 & 0.94 & 0.94 & 532 \\
-    LAYING & 0.97 & 0.98 & 0.98 & 537 \\
-    \midrule
-    \textbf{Weighted Avg} & \textbf{0.93} & \textbf{0.93} & \textbf{0.93} & \textbf{2947} \\
-    \bottomrule
-  \end{tabular}
+\begin{table}[htbp]
+\centering
+\caption{Complete Evaluation Metrics on Test Set}
+\begin{tabular}{ll}
+\toprule
+metric & value \\
+\midrule
+accuracy & 0.9253\\
+precision\_macro & 0.9271\\
+recall\_macro & 0.9216\\
+f1\_macro & 0.9231\\
+precision\_micro & 0.9253\\
+recall\_micro & 0.9253\\
+f1\_micro & 0.9253
+\bottomrule
+\end{tabular}
 \end{table}
 
-\section{Provenance Graph Statistics}
+\end{center}
 
-The complete provenance graph logged during this experiment contains:
+\vspace{1em}
+
+\subsubsection{Numeric Confusion Matrix}
+
+The confusion matrix in numeric form shows the exact count of predictions for each true class versus predicted class combination, enabling precise analysis of misclassification patterns.
+
+\begin{center}
+\footnotesize
+
+\begin{table}[htbp]
+\centering
+\caption{Confusion Matrix Values (Numeric)}
+\begin{tabular}{lllllll}
+\toprule
+Unnamed: 0 & LAYING & SITTING & STANDING & WALKING & WALKING\_DOWNSTAIRS & WALKING\_UPSTAIRS \\
+\midrule
+LAYING & 537 & 0 & 0 & 0 & 0 & 0\\
+SITTING & 0 & 429 & 62 & 0 & 0 & 0\\
+STANDING & 0 & 30 & 502 & 0 & 0 & 0\\
+WALKING & 0 & 0 & 0 & 481 & 10 & 5\\
+WALKING\_DOWNSTAIRS & 0 & 0 & 0 & 25 & 352 & 43\\
+WALKING\_UPSTAIRS & 0 & 0 & 0 & 39 & 6 & 426
+\bottomrule
+\end{tabular}
+\end{table}
+
+\end{center}
+
+\vspace{1em}
+
+\subsubsection{Detailed Classification Report}
+
+The complete classification report provides per-class precision, recall, F1-score, and support values for all six activity classes, along with macro and weighted averages.
+
+\begin{center}
+\footnotesize
+
+\begin{table}[htbp]
+\centering
+\caption{Detailed Classification Report with All Metrics}
+\begin{tabular}{llllllllll}
+\toprule
+Unnamed: 0 & LAYING & SITTING & STANDING & WALKING & WALKING\_DOWNSTAIRS & WALKING\_UPSTAIRS & accuracy & macro avg & weighted avg \\
+\midrule
+precision & 1.0000 & 0.9346 & 0.8901 & 0.8826 & 0.9565 & 0.8987 & 0.9253 & 0.9271 & 0.9271\\
+recall & 1.0000 & 0.8737 & 0.9436 & 0.9698 & 0.8381 & 0.9045 & 0.9253 & 0.9216 & 0.9253\\
+f1-score & 1.0000 & 0.9032 & 0.9161 & 0.9241 & 0.8934 & 0.9016 & 0.9253 & 0.9231 & 0.9250\\
+support & 537.0000 & 491.0000 & 532.0000 & 496.0000 & 420.0000 & 471.0000 & 0.9253 & 2947.00 & 2947.00
+\bottomrule
+\end{tabular}
+\end{table}
+
+\end{center}
+
+\vspace{1em}
+
+\subsubsection{Notes on Metric Interpretation}
+
 \begin{itemize}
-    \item 50+ prov:Activity nodes (across 6 CRISP-DM phases)
-    \item 70+ prov:Entity nodes (datasets, models, figures, reports)
-    \item 2 prov:Agent nodes (code writers: Person A and Person B)
-    \item 100+ prov:qualifiedAssociation relationships
-    \item 80+ prov:wasGeneratedBy relationships
-    \item All timestamps in ISO 8601 format with timezone information
+    \item \textbf{Precision:} Proportion of predicted instances for a class that are truly that class
+    \item \textbf{Recall:} Proportion of actual instances of a class that were correctly identified
+    \item \textbf{F1-Score:} Harmonic mean of precision and recall, balancing both metrics
+    \item \textbf{Support:} Number of actual instances of each class in the test set
+    \item \textbf{Macro Average:} Unweighted mean of per-class metrics, treating all classes equally
+    \item \textbf{Weighted Average:} Mean of per-class metrics weighted by class support
 \end{itemize}
 
-\bibliographystyle{ACM-Reference-Format}
+All visualizations referenced in the main body of this report are generated from these underlying data tables and are available in the output/figures directory of the experiment archive.
 
+\balance
 \end{document}
